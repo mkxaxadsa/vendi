@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hive_flutter/hive_flutter.dart';
@@ -23,12 +24,13 @@ Map _deepLinkData = {};
 Map _gcd = {};
 bool _isFirstLaunch = false;
 String _afStatus = '';
+String campaignId = '';
+String campx = '';
 
 Future<void> initializeApp() async {
   await Hive.initFlutter();
   Hive.registerAdapter(MachineAdapter());
   Hive.registerAdapter(ProductAdapter());
-
   await AppTrackingTransparency.requestTrackingAuthorization();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   await FirebaseRemoteConfig.instance.setConfigSettings(RemoteConfigSettings(
@@ -70,16 +72,22 @@ Future<void> mndjknaskdnaskd() async {
             ].contains(e.key))
         .map((e) => '&${e.key}=${e.value}')
         .join();
+    campaignId = res['campaign_id'] ?? '';
+    campx = res['campaign'] ?? '';
   });
 
   _appsflyerSdk.onInstallConversionData((res) {
     _gcd = res;
     _isFirstLaunch = res['payload']['is_first_launch'];
     _afStatus = res['payload']['af_status'];
+    campaignId = res['payload']['campaign_id'] ?? '';
+    campx = res['payload']['campaign'] ?? '';
   });
 
   _appsflyerSdk.onDeepLinking((DeepLinkResult dp) {
     _deepLinkData = dp.toJson();
+    campaignId = dp.deepLink?.campaignId ?? '';
+    campx = dp.deepLink?.campaign ?? '';
   });
 
   apsss = await _appsflyerSdk.getAppsFlyerUID() ?? '';
@@ -87,13 +95,26 @@ Future<void> mndjknaskdnaskd() async {
   _appsflyerSdk.startSDK();
 }
 
-void main() {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await Hive.initFlutter();
+  Hive.registerAdapter(MachineAdapter());
+  Hive.registerAdapter(ProductAdapter());
+
+  await AppTrackingTransparency.requestTrackingAuthorization();
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  await FirebaseRemoteConfig.instance.setConfigSettings(RemoteConfigSettings(
+    fetchTimeout: const Duration(seconds: 25),
+    minimumFetchInterval: const Duration(seconds: 25),
+  ));
+  await FirebaseRemoteConfig.instance.fetchAndActivate();
+
+  await mndjknaskdnaskd();
   runApp(const MyApp());
 }
 
 String mkldas = '';
-Future<bool> njkdfsakdsa() async {
+Future<bool> dre() async {
   final nfjksdkjasd = FirebaseRemoteConfig.instance;
   await nfjksdkjasd.fetchAndActivate();
   mndjknaskdnaskd();
@@ -125,22 +146,15 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<bool>(
-      future: njkdfsakdsa(),
+      future: dre(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return MaterialApp(
             debugShowCheckedModeBanner: false,
             home: Container(
-              color: Colors.black,
-              child: Center(
-                child: Container(
-                  height: 70,
-                  width: 70,
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(15),
-                    child: Image.asset('assets/images/icon.png'),
-                  ),
-                ),
+              color: Colors.white,
+              child: const Center(
+                child: CupertinoActivityIndicator(),
               ),
             ),
           );
@@ -152,6 +166,8 @@ class MyApp extends StatelessWidget {
                 njfkds: mkldas,
                 njfkads: apsss,
                 mkda: cancelation,
+                campaignId: campaignId,
+                campx: campx,
               ),
             );
           } else {
